@@ -78,7 +78,7 @@ public class DefaultRpcClient implements RpcClient {
 		String uriStr = uri.toUriStr();
 		Transport transport = serviceTransportMap.get(uriStr);
 		if (transport == null) {
-			synchronized (uriStr) {
+			synchronized (uriStr.intern()) {
 				if (serviceTransportMap.get(uriStr) == null) {
 					transport = createTransport(uri);
 					serviceTransportMap.put(uriStr, transport);
