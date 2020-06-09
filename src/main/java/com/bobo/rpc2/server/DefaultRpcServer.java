@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bobo.rpc2.common.ConnectHelper;
+import com.bobo.rpc2.common.EventLoopGroupFactory;
 import com.bobo.rpc2.common.InetAddressHelper;
 import com.bobo.rpc2.namesrv.DefaultNamesrvClient;
 import com.bobo.rpc2.transport.URI;
@@ -17,7 +18,6 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -36,9 +36,9 @@ public class DefaultRpcServer implements RpcServer {
 	private final DefaultNamesrvClient namesrvClient;
 
 	public DefaultRpcServer() {
-		bossGroup = new NioEventLoopGroup(1);
-		ioGroup = new NioEventLoopGroup();
-		businessGroup = new NioEventLoopGroup(BUSINESS_THREADS_NUM);
+		bossGroup = EventLoopGroupFactory.newEventLoopGroup(1);
+		ioGroup = EventLoopGroupFactory.newEventLoopGroup();
+		businessGroup = EventLoopGroupFactory.newEventLoopGroup(BUSINESS_THREADS_NUM);
 		namesrvClient = new DefaultNamesrvClient();
 	}
 
@@ -85,4 +85,5 @@ public class DefaultRpcServer implements RpcServer {
 			namesrvClient.close();
 		}
 	}
+
 }

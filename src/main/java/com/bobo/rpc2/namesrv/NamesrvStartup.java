@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bobo.rpc2.common.ConnectHelper;
+import com.bobo.rpc2.common.EventLoopGroupFactory;
 import com.bobo.rpc2.common.Startup;
 import com.bobo.rpc2.transport.codec.RemotingCommandCodec;
 import com.bobo.rpc2.transport.handler.netty.ServerHandler;
@@ -16,7 +17,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -31,8 +31,8 @@ public class NamesrvStartup implements Startup, Closeable {
 
 	@Override
 	public void start() {
-		bossGroup = new NioEventLoopGroup(1);
-		workerGroup = new NioEventLoopGroup();
+		bossGroup = EventLoopGroupFactory.newEventLoopGroup(1);
+		workerGroup = EventLoopGroupFactory.newEventLoopGroup();
 
 		ServerBootstrap bootstrap = new ServerBootstrap();
 		bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)

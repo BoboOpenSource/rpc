@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bobo.rpc2.common.ConnectHelper;
+import com.bobo.rpc2.common.EventLoopGroupFactory;
 import com.bobo.rpc2.namesrv.DefaultNamesrvClient;
 import com.bobo.rpc2.server.ServiceURI;
 import com.bobo.rpc2.transport.Transport;
@@ -21,7 +22,6 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -53,7 +53,7 @@ public class DefaultRpcClient implements RpcClient {
 
 	@Override
 	public Channel connect(URI uri) {
-		EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+		EventLoopGroup eventLoopGroup = EventLoopGroupFactory.newEventLoopGroup();
 		final Bootstrap bootstrap = new Bootstrap();
 		bootstrap.group(eventLoopGroup).channel(NioSocketChannel.class).option(ChannelOption.SO_REUSEADDR, true)
 				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, ConnectHelper.CONNECT_TIMEOUT)

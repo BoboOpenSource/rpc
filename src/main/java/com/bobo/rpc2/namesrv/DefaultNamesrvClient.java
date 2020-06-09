@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.bobo.rpc2.common.ConnectHelper;
+import com.bobo.rpc2.common.EventLoopGroupFactory;
 import com.bobo.rpc2.common.exception.LookupServiceException;
 import com.bobo.rpc2.common.exception.RegisterServiceException;
 import com.bobo.rpc2.server.ServiceURI;
@@ -25,7 +26,6 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -39,7 +39,7 @@ public class DefaultNamesrvClient implements NamesrvClient {
 
 	@Override
 	public Channel connect(URI namesrvUri) {
-		eventLoopGroup = new NioEventLoopGroup();
+		eventLoopGroup = EventLoopGroupFactory.newEventLoopGroup();
 		final Bootstrap bootstrap = new Bootstrap();
 		bootstrap.group(eventLoopGroup).channel(NioSocketChannel.class)
 				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, ConnectHelper.CONNECT_TIMEOUT)

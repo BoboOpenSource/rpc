@@ -40,6 +40,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+
 		RemotingCommand command = (RemotingCommand) msg;
 		int commandId = command.getCommandId();
 		CompletableFuture<RemotingCommand> future = RequestFutureContainer.pullRequestFuture(commandId);
