@@ -102,9 +102,13 @@ public class DefaultRpcClient implements RpcClient {
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void stop() {
 		if (namesrvClient != null) {
-			namesrvClient.close();
+			try {
+				namesrvClient.close();
+			} catch (IOException e) {
+				log.info("stop namesrvClient exception", e);
+			}
 		}
 		serviceTransportMap.entrySet().forEach((entry) -> {
 			entry.getValue().close();

@@ -1,14 +1,11 @@
 package com.bobo.rpc2.namesrv;
 
-import java.io.Closeable;
-import java.io.IOException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bobo.rpc2.common.ConnectHelper;
 import com.bobo.rpc2.common.EventLoopGroupFactory;
-import com.bobo.rpc2.common.Startup;
+import com.bobo.rpc2.common.LifeLine;
 import com.bobo.rpc2.transport.codec.RemotingCommandCodec;
 import com.bobo.rpc2.transport.handler.netty.ServerHandler;
 
@@ -21,9 +18,9 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 
-public class NamesrvStartup implements Startup, Closeable {
+public class NamesrvServer implements LifeLine {
 
-	private static final Logger log = LoggerFactory.getLogger(NamesrvStartup.class);
+	private static final Logger log = LoggerFactory.getLogger(NamesrvServer.class);
 	private static final int PORT = Integer.parseInt(System.getProperty("namesrv.port", "8888"));
 
 	private EventLoopGroup bossGroup;
@@ -48,7 +45,7 @@ public class NamesrvStartup implements Startup, Closeable {
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void stop() {
 		if (bossGroup != null) {
 			bossGroup.shutdownGracefully();
 		}

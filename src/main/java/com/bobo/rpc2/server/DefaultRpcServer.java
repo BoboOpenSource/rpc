@@ -1,7 +1,5 @@
 package com.bobo.rpc2.server;
 
-import java.io.IOException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +69,7 @@ public class DefaultRpcServer implements RpcServer {
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void stop() {
 		if (bossGroup != null) {
 			bossGroup.shutdownGracefully();
 		}
@@ -82,7 +80,7 @@ public class DefaultRpcServer implements RpcServer {
 			businessGroup.shutdownGracefully();
 		}
 		if (namesrvClient != null) {
-			namesrvClient.close();
+			namesrvClient.stop();
 		}
 	}
 

@@ -1,9 +1,7 @@
 package com.bobo.rpc2.transport;
 
-import java.io.Closeable;
-
 import io.netty.channel.Channel;
 
-public interface Client extends Closeable{
+public interface Client {
 	Channel connect(URI uri);
 }

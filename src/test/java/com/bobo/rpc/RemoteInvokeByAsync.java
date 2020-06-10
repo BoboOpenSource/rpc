@@ -15,7 +15,7 @@ import com.bobo.rpc2.transport.seria.SerializerSupport;
  * @author bo.wang
  * @desc 回调方式rpc调用
  */
-public class RpcClientByAsyncTest {
+public class RemoteInvokeByAsync {
 
 	public static void main(String[] args) throws IOException {
 		RpcClient rpcClient = new DefaultRpcClient();

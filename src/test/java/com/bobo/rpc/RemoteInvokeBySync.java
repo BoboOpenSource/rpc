@@ -14,7 +14,7 @@ import com.bobo.rpc2.common.exception.InvokeException;
  * @author bo.wang
  * @desc 同步方式rpc调用
  */
-public class RpcClientBySyncTest {
+public class RemoteInvokeBySync {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 		RpcClient rpcClient = new DefaultRpcClient();

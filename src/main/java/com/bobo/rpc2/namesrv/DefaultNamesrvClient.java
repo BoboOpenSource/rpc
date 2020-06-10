@@ -1,6 +1,5 @@
 package com.bobo.rpc2.namesrv;
 
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -104,7 +103,7 @@ public class DefaultNamesrvClient implements NamesrvClient {
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void stop() {
 		if (eventLoopGroup != null) {
 			eventLoopGroup.shutdownGracefully();
 		}
