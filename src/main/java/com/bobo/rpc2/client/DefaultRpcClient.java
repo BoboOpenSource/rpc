@@ -1,6 +1,5 @@
 package com.bobo.rpc2.client;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -104,11 +103,7 @@ public class DefaultRpcClient implements RpcClient {
 	@Override
 	public void stop() {
 		if (namesrvClient != null) {
-			try {
-				namesrvClient.close();
-			} catch (IOException e) {
-				log.info("stop namesrvClient exception", e);
-			}
+			namesrvClient.stop();
 		}
 		serviceTransportMap.entrySet().forEach((entry) -> {
 			entry.getValue().close();
