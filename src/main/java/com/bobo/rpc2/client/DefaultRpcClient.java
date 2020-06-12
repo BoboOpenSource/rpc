@@ -2,12 +2,14 @@ package com.bobo.rpc2.client;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bobo.rpc2.common.ConnectHelper;
 import com.bobo.rpc2.common.EventLoopGroupFactory;
+import com.bobo.rpc2.common.ThreadFactoryFactory;
 import com.bobo.rpc2.namesrv.DefaultNamesrvClient;
 import com.bobo.rpc2.server.ServiceURI;
 import com.bobo.rpc2.transport.Transport;
@@ -52,15 +54,18 @@ public class DefaultRpcClient implements RpcClient {
 
 	@Override
 	public Channel connect(URI uri) {
-		EventLoopGroup eventLoopGroup = EventLoopGroupFactory.newEventLoopGroup();
+		EventLoopGroup eventLoopGroup = EventLoopGroupFactory.newEventLoopGroup(ThreadFactoryFactory.newThreadFactory("RpcClient"));
 		final Bootstrap bootstrap = new Bootstrap();
-		bootstrap.group(eventLoopGroup).channel(NioSocketChannel.class).option(ChannelOption.SO_REUSEADDR, true)
+		bootstrap.group(eventLoopGroup).channel(NioSocketChannel.class)
+				.option(ChannelOption.SO_REUSEADDR, true)
+				.option(ChannelOption.TCP_NODELAY, false)
+				.option(ChannelOption.SO_KEEPALIVE, true)
 				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, ConnectHelper.CONNECT_TIMEOUT)
 				.handler(new ChannelInitializer<SocketChannel>() {
 					@Override
 					protected void initChannel(SocketChannel ch) {
 						ch.pipeline().addLast(new RemotingCommandCodec())
-								.addLast(new IdleStateHandler(0, 0, ConnectHelper.IDLE_TIMEOUT))
+								.addLast(new IdleStateHandler(0, 0, ConnectHelper.HEARTBEAT_INTERVAL,TimeUnit.MILLISECONDS))
 								.addLast(new ClientHandler(bootstrap, uri, (newChannel) -> {
 									if (newChannel == null) {
 										removeTransport(uri);

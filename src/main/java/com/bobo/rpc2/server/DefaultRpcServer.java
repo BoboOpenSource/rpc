@@ -1,11 +1,16 @@
 package com.bobo.rpc2.server;
 
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bobo.rpc2.common.ConnectHelper;
 import com.bobo.rpc2.common.EventLoopGroupFactory;
 import com.bobo.rpc2.common.InetAddressHelper;
+import com.bobo.rpc2.common.ThreadFactoryFactory;
 import com.bobo.rpc2.namesrv.DefaultNamesrvClient;
 import com.bobo.rpc2.transport.URI;
 import com.bobo.rpc2.transport.URIType;
@@ -13,6 +18,7 @@ import com.bobo.rpc2.transport.codec.RemotingCommandCodec;
 import com.bobo.rpc2.transport.handler.netty.ServerHandler;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -34,9 +40,9 @@ public class DefaultRpcServer implements RpcServer {
 	private final DefaultNamesrvClient namesrvClient;
 
 	public DefaultRpcServer() {
-		bossGroup = EventLoopGroupFactory.newEventLoopGroup(1);
-		ioGroup = EventLoopGroupFactory.newEventLoopGroup();
-		businessGroup = EventLoopGroupFactory.newEventLoopGroup(BUSINESS_THREADS_NUM);
+		bossGroup = EventLoopGroupFactory.newEventLoopGroup(1, ThreadFactoryFactory.newThreadFactory("RpcServer_Boss"));
+		ioGroup = EventLoopGroupFactory.newEventLoopGroup(ThreadFactoryFactory.newThreadFactory("RpcServer_Selector"));
+		businessGroup = EventLoopGroupFactory.newEventLoopGroup(BUSINESS_THREADS_NUM,ThreadFactoryFactory.newThreadFactory("RpcServer_Work"));
 		namesrvClient = new DefaultNamesrvClient();
 	}
 
@@ -44,12 +50,16 @@ public class DefaultRpcServer implements RpcServer {
 	public void start() {
 		ServerBootstrap bootstrap = new ServerBootstrap();
 		bootstrap.group(bossGroup, ioGroup).channel(NioServerSocketChannel.class)
-				.childOption(ChannelOption.SO_REUSEADDR, true).childOption(ChannelOption.SO_KEEPALIVE, true)
+				.option(ChannelOption.SO_BACKLOG, 1024)
+				.option(ChannelOption.SO_REUSEADDR, true)
+				.childOption(ChannelOption.SO_KEEPALIVE, false)
+				.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+				.childOption(ChannelOption.TCP_NODELAY, true)
 				.childHandler(new ChannelInitializer<SocketChannel>() {
 					@Override
 					protected void initChannel(SocketChannel ch) {
 						ch.pipeline().addLast(new RemotingCommandCodec())
-								.addLast(new IdleStateHandler(0, 0, ConnectHelper.IDLE_TIMEOUT))
+								.addLast(new IdleStateHandler(0, 0, ConnectHelper.IDLE_TIMEOUT, TimeUnit.MILLISECONDS))
 								.addLast(businessGroup, ServerHandler.INSTANCE);
 					}
 				}).bind(RPC_SERVER_PORT).addListener((future) -> {

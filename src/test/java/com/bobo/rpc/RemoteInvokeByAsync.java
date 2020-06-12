@@ -2,6 +2,9 @@ package com.bobo.rpc;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.bobo.rpc.facade.ISignInService;
 import com.bobo.rpc.facade.SignResult;
 import com.bobo.rpc.facade.Worker;
@@ -17,19 +20,21 @@ import com.bobo.rpc2.transport.seria.SerializerSupport;
  */
 public class RemoteInvokeByAsync {
 
+	private static Logger log = LoggerFactory.getLogger(RemoteInvokeBySync.class);
+
 	public static void main(String[] args) throws IOException {
 		RpcClient rpcClient = new DefaultRpcClient();
 		rpcClient.start();
 
 		RpcConfig config = RpcConfig.newConfigAsAsync("bobo.signService", ISignInService.class, 100, (response) -> {
-			System.out.println("rpc invoke response:"
-					+ SerializerSupport.deSerialize(response.getBody(), SignResult.class).getDesc());
+			log.info("rpc invoke response:{}",
+					SerializerSupport.deSerialize(response.getBody(), SignResult.class).getDesc());
 		});
 		ISignInService service = rpcClient.getService(config);
 		try {
 			service.signIn(new Worker(1, "bobo", "开发部"));
 		} catch (InvokeException e) {
-			System.out.println("rpc invoke failed");
+			log.error("rpc invoke failed", e);
 		}
 	}
 }

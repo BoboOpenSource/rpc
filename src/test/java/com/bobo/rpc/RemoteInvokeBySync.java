@@ -2,6 +2,9 @@ package com.bobo.rpc;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.bobo.rpc.facade.ISignInService;
 import com.bobo.rpc.facade.SignResult;
 import com.bobo.rpc.facade.Worker;
@@ -16,6 +19,8 @@ import com.bobo.rpc2.common.exception.InvokeException;
  */
 public class RemoteInvokeBySync {
 
+	private static Logger log = LoggerFactory.getLogger(RemoteInvokeBySync.class);
+
 	public static void main(String[] args) throws IOException, InterruptedException {
 		RpcClient rpcClient = new DefaultRpcClient();
 		rpcClient.start();
@@ -24,9 +29,9 @@ public class RemoteInvokeBySync {
 		ISignInService service = rpcClient.getService(config);
 		try {
 			SignResult result = service.signIn(new Worker(1, "bobo", "开发部"));
-			System.out.println("rpc invoke response:" + result.getDesc());
+			log.info("rpc invoke response:{}", result.getDesc());
 		} catch (InvokeException e) {
-			System.out.println("rpc invoke failed");
+			log.info("rpc invoke failed", e);
 		}
 
 	}

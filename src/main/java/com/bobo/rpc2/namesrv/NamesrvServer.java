@@ -1,11 +1,14 @@
 package com.bobo.rpc2.namesrv;
 
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bobo.rpc2.common.ConnectHelper;
 import com.bobo.rpc2.common.EventLoopGroupFactory;
 import com.bobo.rpc2.common.LifeLine;
+import com.bobo.rpc2.common.ThreadFactoryFactory;
 import com.bobo.rpc2.transport.codec.RemotingCommandCodec;
 import com.bobo.rpc2.transport.handler.netty.ServerHandler;
 
@@ -28,20 +31,28 @@ public class NamesrvServer implements LifeLine {
 
 	@Override
 	public void start() {
-		bossGroup = EventLoopGroupFactory.newEventLoopGroup(1);
-		workerGroup = EventLoopGroupFactory.newEventLoopGroup();
+		bossGroup = EventLoopGroupFactory.newEventLoopGroup(1, ThreadFactoryFactory.newThreadFactory("NameSrv_Boss"));
+		workerGroup = EventLoopGroupFactory.newEventLoopGroup(ThreadFactoryFactory.newThreadFactory("NameSrv_Selector"));
 
 		ServerBootstrap bootstrap = new ServerBootstrap();
 		bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
-				.childOption(ChannelOption.SO_REUSEADDR, true).childOption(ChannelOption.SO_KEEPALIVE, true)
+				.option(ChannelOption.SO_BACKLOG, 1024).option(ChannelOption.SO_REUSEADDR, true)
+				.childOption(ChannelOption.SO_KEEPALIVE, false).childOption(ChannelOption.TCP_NODELAY, true)
 				.childHandler(new ChannelInitializer<SocketChannel>() {
 					@Override
 					protected void initChannel(SocketChannel ch) {
 						ch.pipeline().addLast(new RemotingCommandCodec())
-								.addLast(new IdleStateHandler(0, 0, ConnectHelper.IDLE_TIMEOUT))
+								.addLast(new IdleStateHandler(0, 0, ConnectHelper.IDLE_TIMEOUT, TimeUnit.MILLISECONDS))
 								.addLast(ServerHandler.INSTANCE);
 					}
-				}).bind(PORT).addListener((ChannelFutureListener) future -> log.info("namesrv startup,port:{}", PORT));
+				}).bind(PORT).addListener((ChannelFutureListener) future -> {
+					if (future.isSuccess()) {
+						log.info("namesrv startup,port:" + PORT);
+					} else {
+						log.error("namesrv start failed", future.cause());
+					}
+				});
+
 	}
 
 	@Override

@@ -7,6 +7,7 @@ import java.util.concurrent.TimeoutException;
 
 import com.bobo.rpc2.common.ConnectHelper;
 import com.bobo.rpc2.common.EventLoopGroupFactory;
+import com.bobo.rpc2.common.ThreadFactoryFactory;
 import com.bobo.rpc2.common.exception.LookupServiceException;
 import com.bobo.rpc2.common.exception.RegisterServiceException;
 import com.bobo.rpc2.server.ServiceURI;
@@ -38,15 +39,17 @@ public class DefaultNamesrvClient implements NamesrvClient {
 
 	@Override
 	public Channel connect(URI namesrvUri) {
-		eventLoopGroup = EventLoopGroupFactory.newEventLoopGroup();
+		eventLoopGroup = EventLoopGroupFactory.newEventLoopGroup(ThreadFactoryFactory.newThreadFactory("NameSrvClient"));
 		final Bootstrap bootstrap = new Bootstrap();
 		bootstrap.group(eventLoopGroup).channel(NioSocketChannel.class)
 				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, ConnectHelper.CONNECT_TIMEOUT)
+				.option(ChannelOption.TCP_NODELAY, true)
+				.option(ChannelOption.SO_KEEPALIVE, false)
 				.handler(new ChannelInitializer<SocketChannel>() {
 					@Override
 					protected void initChannel(SocketChannel ch) {
 						ch.pipeline().addLast(new RemotingCommandCodec())
-								.addLast(new IdleStateHandler(0, 0, ConnectHelper.IDLE_TIMEOUT))
+								.addLast(new IdleStateHandler(0, 0, ConnectHelper.HEARTBEAT_INTERVAL,TimeUnit.MILLISECONDS))
 								.addLast(new ClientHandler(bootstrap, namesrvUri, (newChannel) -> {
 									if (newChannel != null) {
 										namesrvTransport.setChannel(newChannel);
